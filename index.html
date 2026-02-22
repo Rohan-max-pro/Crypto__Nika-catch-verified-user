@@ -65,6 +65,7 @@
             gap: 10px;
             min-width: 180px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 10;
         }
 
         .nav-menu a {
@@ -166,6 +167,7 @@
             backdrop-filter: blur(6px);
             position: absolute;
             top: 4rem;
+
         }
 
         .info-section h2 {
@@ -356,7 +358,7 @@
 
         const verifiedImages = [];
         const trapImages = [];
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 6; i++) {
             let img = new Image();
             img.src = "verified" + i + ".png";
             verifiedImages.push(img);
