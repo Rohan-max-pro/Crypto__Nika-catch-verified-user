@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch Verified Users</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-image: url(BG.jfif);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(26, 35, 126, 0.6));
+            z-index: -1;
+        }
+
+        /* ===== TOP MENU BUTTON ===== */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e293b;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        .menu-btn:hover {
+            background: #334155;
+        }
+
+        /* ===== DROPDOWN NAV ===== */
+        .nav-menu {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            background: #111827;
+            border-radius: 10px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #cbd5e1;
+            padding: 8px;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background: #1e293b;
+            color: white;
+            cursor: pointer;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .close-btn:hover {
+            background: #dc2626;
+        }
+
+        /* ===== GAME CENTER ===== */
+        .game-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .game-container {
+            position: relative;
+            width: 95%;
+            max-width: 420px;
+        }
+
+        canvas {
+            background: #001533;
+            border-radius: 20px;
+            width: 100%;
+            height: 70vh;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #playBtn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #gameOverScreen {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        /* ===== INFO SECTION ===== */
+        .info-section {
+            width: 90%;
+            max-width: 700px;
+            margin: 40px auto;
+            display: none;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(6px);
+            position: absolute;
+            top: 4rem;
+        }
+
+        .info-section h2 {
+            color: #38bdf8;
+            margin-bottom: 15px;
+        }
+
+        .dev-links {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .dev-links a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+            background: #1e293b;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .dev-links img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+        }
+
+        .about-billions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .billions-highlight {
+            margin-top: 20px;
+            background: #1e293b;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .about-dev {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="menu-btn" onclick="toggleMenu()">☰ Menu</button>
+
+    <div class="nav-menu" id="navMenu">
+        <a onclick="showSection('billions')">🌐 About Billions</a>
+        <a onclick="showSection('dev')">👨‍💻 About Dev</a>
+        <a onclick="hideSections()">🎮 Back to Game</a>
+    </div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+            <div id="ui">Score: 0 | Lives: 3</div>
+            <button id="playBtn">Play</button>
+
+            <div id="gameOverScreen">
+                <h2 id="finalScore"></h2>
+                <button onclick="restartGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT BILLIONS -->
+    <div id="billions" class="info-section">
+        <button class="close-btn" onclick="hideSections()">✖</button>
+        <h2>About Billions Network</h2>
+        <div class="about-billions">
+            <p>Billions Network is a next generation digital infrastructure designed to verify real humans online
+                without
+                collecting biometrics, without centralized databases and without compromising personal privacy.</p>
+
+            <p>In a world increasingly dominated by bots, fake accounts, deepfakes, and AI generated identities,
+                Billions
+                Network introduces a new standard: device level proof of humanity.</p>
+        </div>
+        <div class="billions-highlight">
+
+            <h4>Introduces KYA - Know Your Agent.</h4>
+
+            Our Co-founder @provenauthority and team of @billions_ntwk
+            Discovers the new concept of filtering the fake agent in the internet and increasing the trust of real
+            agent.
+
+            What more important you can decide on your own which agent is good or bad.
+        </div>
+    </div>
+
+    <!-- ABOUT DEV -->
+    <div id="dev" class="info-section">
+        <button class="close-btn" onclick="hideSections()">✖</button>
+        <h2>About Developer</h2>
+        <div class="about-dev">
+            <p>Nika is a creative tech enthusiast and digital builder who blends innovation with imagination.He is
+                passionate about creating interactive digital experiences from browser based games to quiz platforms and
+                creative meme concepts.</p>
+
+            <p>Nika has a strong interest in web development, game design and logic based programming. He enjoys
+                experimenting with HTML, CSS, JavaScript, and Python to turn ideas into working digital products.</p>
+
+            <p>Beyond coding, Nika has a unique talent for branding and concept development. His work around the
+                Billions
+                concept reflects his interest in digital identity, human verification and next-generation online
+                ecosystems.
+                He combines technical contribution with creative storytelling and even integrating music and visual
+                themes
+                into his digital ideas.</p>
+        </div>
+
+        <div class="dev-links">
+            <a href="https://x.com/Crypto__Nika" target="_blank">
+                <img src="X logo.jpg">
+                Follow me on X :crypto__nika
+            </a>
+
+            <a href="https://discord.com/users/727733040071049257" target="_blank">
+                <img src="DC.png">
+                Discord :@Crypto__Nika
+            </a>
+        </div>
+    </div>
+
+    <script>
+
+        /* ===== MENU ===== */
+        function toggleMenu() {
+            const menu = document.getElementById("navMenu");
+            menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+        }
+
+        function showSection(id) {
+            document.getElementById("billions").style.display = "none";
+            document.getElementById("dev").style.display = "none";
+            document.getElementById(id).style.display = "block";
+            document.getElementById("navMenu").style.display = "none";
+        }
+
+        function hideSections() {
+            document.getElementById("billions").style.display = "none";
+            document.getElementById("dev").style.display = "none";
+            document.getElementById("navMenu").style.display = "none";
+        }
+
+        /* ===== ORIGINAL GAME CODE (UNCHANGED) ===== */
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const ui = document.getElementById("ui");
+        const playBtn = document.getElementById("playBtn");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const finalScore = document.getElementById("finalScore");
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        let bucket = { width: 80, height: 20, x: 0, y: 0 };
+        let items = [];
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+
+        function resetBucket() {
+            bucket.x = canvas.width / 2 - bucket.width / 2;
+            bucket.y = canvas.height - 40;
+        }
+        resetBucket();
+
+        const verifiedImages = [];
+        const trapImages = [];
+        for (let i = 1; i <= 3; i++) {
+            let img = new Image();
+            img.src = "verified" + i + ".png";
+            verifiedImages.push(img);
+        }
+        for (let i = 1; i <= 3; i++) {
+            let img = new Image();
+            img.src = "trap" + i + ".png";
+            trapImages.push(img);
+        }
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        function playTone(freq, duration, type = "sine", volume = 0.2) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.value = volume;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.stop(audioCtx.currentTime + duration);
+        }
+        function playWrongSound() { playTone(180, 0.25, "square", 0.25); }
+        function playCatchSound() { playTone(800, 0.15, "triangle", 0.15); }
+        function playStartSound() {
+            playTone(440, 0.2);
+            setTimeout(() => playTone(660, 0.2), 150);
+            setTimeout(() => playTone(880, 0.3), 300);
+        }
+        function playGameOverSound() { playTone(300, 0.4, "sawtooth", 0.3); }
+
+        function spawnItem() {
+            let isVerified = Math.random() < 0.6;
+            let img = isVerified ?
+                verifiedImages[Math.floor(Math.random() * 3)] :
+                trapImages[Math.floor(Math.random() * 3)];
+
+            items.push({
+                x: Math.random() * (canvas.width - 40),
+                y: -40,
+                size: 40,
+                speed: 2 + Math.random() * 2,
+                verified: isVerified,
+                img: img
+            });
+        }
+
+        function drawBucket() {
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillRect(bucket.x, bucket.y, bucket.width, bucket.height);
+        }
+
+        function drawItems() {
+            items.forEach(item => {
+                if (item.img.complete) {
+                    ctx.drawImage(item.img, item.x, item.y, item.size, item.size);
+                }
+            });
+        }
+
+        function updateItems() {
+            items.forEach((item, index) => {
+                item.y += item.speed;
+
+                if (
+                    item.y + item.size > bucket.y &&
+                    item.x < bucket.x + bucket.width &&
+                    item.x + item.size > bucket.x
+                ) {
+                    if (item.verified) { score++; playCatchSound(); }
+                    else { lives--; playWrongSound(); }
+                    items.splice(index, 1);
+                }
+
+                if (item.y > canvas.height) {
+                    if (item.verified) { lives--; playWrongSound(); }
+                    items.splice(index, 1);
+                }
+            });
+        }
+
+        function updateUI() {
+            ui.innerText = "Score: " + score + " | Lives: " + lives;
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (Math.random() < 0.02) spawnItem();
+
+            updateItems();
+            drawItems();
+            drawBucket();
+            updateUI();
+
+            if (lives <= 0) {
+                gameRunning = false;
+                playGameOverSound();
+                finalScore.innerText = "Game Over\nFinal Score: " + score;
+                gameOverScreen.style.display = "flex";
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        canvas.addEventListener("mousemove", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            bucket.x = e.clientX - rect.left - bucket.width / 2;
+        });
+        canvas.addEventListener("touchmove", (e) => {
+            const rect = canvas.getBoundingClientRect();
+            bucket.x = e.touches[0].clientX - rect.left - bucket.width / 2;
+        });
+
+        playBtn.onclick = () => {
+            initAudio();
+            score = 0;
+            lives = 3;
+            items = [];
+            gameRunning = true;
+            playBtn.style.display = "none";
+            gameOverScreen.style.display = "none";
+            playStartSound();
+            resetBucket();
+            gameLoop();
+        };
+
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            items = [];
+            gameRunning = true;
+            gameOverScreen.style.display = "none";
+            playStartSound();
+            resetBucket();
+            gameLoop();
+        }
+
+    </script>
+
+</body>
+
+</html>
